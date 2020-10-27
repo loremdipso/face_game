@@ -1,11 +1,12 @@
 import * as faceapi from "face-api.js";
+import { Piece } from "piece";
 
 const POINT_SIZE = 5;
-const POINT_COLOR = "red";
 const DIRECTION_COLOR = "red";
 const DIRECTION_SIZE = 10;
+const NUM_PIECES = 10;
 
-enum Direction {
+export enum Direction {
 	UP = "up",
 	DOWN = "down",
 	LEFT = "left",
@@ -24,9 +25,16 @@ interface Rect {
 	width: number,
 }
 
+class GameState {
+	public pieces: Piece[] = [];
+	direction: Direction;
+	nose: Point = { x: 0, y: 0 };
+}
+
 export class Game {
 	canvas: HTMLCanvasElement;
 	context: CanvasRenderingContext2D;
+	state = new GameState();
 
 	// =============== API ===============
 	constructor(private siblingEl: Element) {
@@ -40,14 +48,50 @@ export class Game {
 		this.resizeCanvas();
 	};
 
-	public handleFace(bounds: Rect, landmarks: faceapi.FaceLandmarks68) {
-		this.clear();
-		let nose = this.getCenter(landmarks.getNose());
-		this.drawPoint(nose);
+	public start() {
+		// TODO: use the good animation frame stuff
+		setInterval(() => {
+			this.update();
+			this.draw();
+		}, 100);
+	}
 
-		let direction = this.getDirection(bounds, nose);
-		// this.printDirection(direction);
-		this.drawDirection(direction);
+	public handleFace(bounds: Rect, landmarks: faceapi.FaceLandmarks68) {
+		this.state.nose = this.getCenter(landmarks.getNose());
+		this.state.direction = this.getDirection(bounds, this.state.nose);
+	}
+
+	// =============== game state ===============
+	private update() {
+		let delay = 0;
+		while (this.state.pieces.length < NUM_PIECES) {
+			let lowestY = this.canvas.height;
+			if (this.state.pieces.length > 0) {
+				lowestY = this.state.pieces[this.state.pieces.length - 1].y;
+			}
+			this.state.pieces.push(new Piece(this.canvas, this.context, lowestY));
+			delay++;
+		}
+
+		for (let i = this.state.pieces.length - 1; i >= 0; i--) {
+			let piece = this.state.pieces[i];
+			piece.update();
+
+			if (piece.shouldDelete()) {
+				this.state.pieces.splice(i, 1);
+			}
+		}
+	}
+
+	private draw() {
+		this.clear();
+
+		drawPoint(this.context, this.state.nose, "red");
+		this.drawDirection(this.state.direction);
+
+		for (let piece of this.state.pieces) {
+			piece.draw();
+		}
 	}
 
 	// =============== utils ===============
@@ -101,16 +145,6 @@ export class Game {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 
-	private drawPoint(center: Point) {
-		this.context.save();
-		this.context.beginPath();
-		this.context.fillStyle = POINT_COLOR;
-		this.context.arc(center.x, center.y, POINT_SIZE, 0, 2 * Math.PI);
-		this.context.closePath();
-		this.context.fill();
-		this.context.restore();
-	}
-
 	private drawDirection(direction: Direction) {
 		let width = this.canvas.width;
 		let height = this.canvas.height;
@@ -141,4 +175,14 @@ export class Game {
 
 function getDistance(p1: Point, p2: Point): number {
 	return Math.sqrt(((p2.x - p1.x) ** 2) + ((p2.y - p1.y) ** 2));
+}
+
+export function drawPoint(context: CanvasRenderingContext2D, center: Point, color: string) {
+	context.save();
+	context.beginPath();
+	context.fillStyle = color;
+	context.arc(center.x, center.y, POINT_SIZE, 0, 2 * Math.PI);
+	context.closePath();
+	context.fill();
+	context.restore();
 }

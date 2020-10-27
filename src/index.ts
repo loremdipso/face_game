@@ -26,6 +26,7 @@ export async function init() {
 		// ### Creating a Canvas Element from an Image or Video Element
 		videoCanvas = faceapi.createCanvasFromMedia(videoEl);
 		videoGroup.append(videoCanvas);
+		game.start();
 
 		// ### Init configs
 		const rect = videoEl.getBoundingClientRect();
