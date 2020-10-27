@@ -57,7 +57,7 @@ export async function init() {
 				.clearRect(0, 0, videoCanvas.width, videoCanvas.height)
 
 			for (let i = 0; i < detections.length; i++) {
-				game.handleFace(detections[i].landmarks);
+				game.handleFace(detections[i].detection.box, detections[i].landmarks);
 			}
 
 			// ### Drawing  in to VideoCanvas
