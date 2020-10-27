@@ -1,4 +1,6 @@
 import * as faceapi from "face-api.js";
+import { FaceExpressionNet } from "face-api.js";
+import { Game } from "game";
 
 
 export async function init() {
@@ -13,15 +15,16 @@ export async function init() {
 		video: true
 	});
 
-	const videoEl = document.getElementById('video');
-	const video = videoEl as HTMLVideoElement;
-	video.srcObject = stream;
+	const videoEl = document.getElementById('video') as HTMLVideoElement;
+	videoEl.srcObject = stream;
 	let videoCanvas: HTMLCanvasElement = null;
 	let videoGroup = document.getElementsByClassName("videoGroup")[0];
 
-	video.addEventListener('play', () => {
+	let game = new Game(videoEl);
+
+	videoEl.addEventListener('play', () => {
 		// ### Creating a Canvas Element from an Image or Video Element
-		videoCanvas = faceapi.createCanvasFromMedia(video);
+		videoCanvas = faceapi.createCanvasFromMedia(videoEl);
 		videoGroup.append(videoCanvas);
 
 		// ### Init configs
@@ -35,19 +38,15 @@ export async function init() {
 		faceapi.matchDimensions(videoCanvas, displayValues)
 
 		setInterval(async () => {
-
-			const detections =
+			let detections =
 				await faceapi.detectAllFaces(
-					video as any,
+					videoEl as any,
 					new faceapi.TinyFaceDetectorOptions()
 				)
 					.withFaceLandmarks() // detect landmark
 					.withFaceDescriptors(); // detect descriptor around face
 
-			// ### Input in to console result's detection
-			// detections.map(console.log)
-
-			const resizedDetections = faceapi.resizeResults(
+			detections = faceapi.resizeResults(
 				detections,
 				displayValues
 			);
@@ -57,12 +56,17 @@ export async function init() {
 				.getContext('2d')
 				.clearRect(0, 0, videoCanvas.width, videoCanvas.height)
 
-			// ### Drawing  in to VideoCanvas
-			faceapi.draw.drawDetections(videoCanvas, resizedDetections);
+			for (let i = 0; i < detections.length; i++) {
+				game.handleFace(detections[i].landmarks);
+			}
 
+			// ### Drawing  in to VideoCanvas
+			faceapi.draw.drawDetections(videoCanvas, detections);
 		}, 100);
 	})
+
 }
+
 
 
 // TODO: remove

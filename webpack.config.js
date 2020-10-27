@@ -38,11 +38,6 @@ module.exports = {
 				test: /\.(ts|tsx)$/,
 				loader: "ts-loader",
 			},
-			// {
-			// 	enforce: "pre",
-			// 	test: /\.js$/,
-			// 	loader: "source-map-loader",
-			// },
 			{
 				test: /\.(png|svg|ico|jpe?g|gif)$/i,
 				use: [
