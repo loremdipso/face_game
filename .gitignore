@@ -9,3 +9,6 @@ node_modules/
 
 # Optional eslint cache
 .eslintcache
+
+src/public/models
+src/public/models/*
