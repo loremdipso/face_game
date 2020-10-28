@@ -23,9 +23,9 @@
 		"webpack-dev-server": "webpack-dev-server --env.mode development --open",
 		"dev": "npm run webpack-dev-server",
 		"start": "npm run dev",
-		"build": "tsc && cp -R src/public/* dist",
+		"build": "npm run build:prod",
 		"build:dev": "npm run webpack -- --env.mode development",
-		"build:prod": "npm run webpack -- --env.mode production"
+		"build:prod": "npm run webpack -- --env.mode production && cp -R src/public/* dist"
 	},
 	"keywords": [],
 	"author": "",
