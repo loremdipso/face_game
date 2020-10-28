@@ -10,11 +10,9 @@ module.exports = {
 	mode: "development",
 
 	output: {
-		path: path.resolve(__dirname, "dist"),
+		path: path.resolve(__dirname, "docs"),
 		filename: "bundle.js",
 		publicPath: "/"
-		//publicPath: "/src/public"
-		// compress: true,
 	},
 
 	devServer: {
@@ -46,10 +44,4 @@ module.exports = {
 			},
 		],
 	},
-
-	// plugins: [
-	// 	new HtmlWebpackPlugin({
-	// 		template: path.resolve(__dirname, "src", "public", "index.html"),
-	// 	}),
-	// ],
 };
