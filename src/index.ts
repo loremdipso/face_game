@@ -45,6 +45,7 @@ export async function init() {
 					new faceapi.TinyFaceDetectorOptions()
 				)
 					.withFaceLandmarks() // detect landmark
+					.withFaceExpressions() // detect landmark
 					.withFaceDescriptors(); // detect descriptor around face
 
 			detections = faceapi.resizeResults(
@@ -58,7 +59,11 @@ export async function init() {
 				.clearRect(0, 0, videoCanvas.width, videoCanvas.height)
 
 			for (let i = 0; i < detections.length; i++) {
-				game.handleFace(detections[i].detection.box, detections[i].landmarks);
+				game.handleFace(
+					detections[i].detection.box,
+					detections[i].landmarks,
+					detections[i].expressions,
+				);
 			}
 
 			// ### Drawing  in to VideoCanvas

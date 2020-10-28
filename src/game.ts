@@ -56,9 +56,14 @@ export class Game {
 		}, 100);
 	}
 
-	public handleFace(bounds: Rect, landmarks: faceapi.FaceLandmarks68) {
+	public handleFace(
+		bounds: Rect,
+		landmarks: faceapi.FaceLandmarks68,
+		expressions: faceapi.FaceExpressions
+	) {
 		this.state.nose = this.getCenter(landmarks.getNose());
-		this.state.direction = this.getDirection(bounds, this.state.nose);
+		this.state.direction = this.getDirectionFromNose(bounds, this.state.nose);
+		this.state.direction = this.getDirectionFromExpressions(expressions);
 	}
 
 	// =============== game state ===============
@@ -117,7 +122,7 @@ export class Game {
 		return center;
 	}
 
-	private getDirection(bounds: Rect, nose: Point): Direction {
+	private getDirectionFromNose(bounds: Rect, nose: Point): Direction {
 		// idea: find out which point the nose is closest to
 		let keyPoints = [
 			{ direction: Direction.UP, point: { x: bounds.x + bounds.width / 2, y: bounds.y } },
@@ -139,6 +144,26 @@ export class Game {
 		return direction;
 	}
 
+	private getDirectionFromExpressions(expressions: faceapi.FaceExpressions): Direction {
+		let sortedExpressions = expressions.asSortedArray();
+
+		for (let expression of sortedExpressions) {
+			// options: 'neutral' | 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised'
+			switch (expression.expression) {
+				case "surprised":
+					return Direction.UP;
+				case "happy":
+					return Direction.DOWN;
+				case "fearful":
+					return Direction.LEFT;
+				case "angry":
+					return Direction.RIGHT;
+			}
+		}
+
+		return Direction.LEFT;
+	}
+
 
 	// =============== drawing ===============
 	private clear() {
@@ -146,8 +171,8 @@ export class Game {
 	}
 
 	private drawDirection(direction: Direction) {
-		let width = this.canvas.width;
-		let height = this.canvas.height;
+		let sectionWidth = this.canvas.width / 4;
+		let sectionTop = this.canvas.height - DIRECTION_SIZE;
 
 		this.context.save();
 		this.context.beginPath();
@@ -155,16 +180,16 @@ export class Game {
 
 		switch (direction) {
 			case Direction.UP:
-				this.context.rect(0, 0, width, DIRECTION_SIZE);
+				this.context.rect(sectionWidth * 0, sectionTop, sectionWidth, DIRECTION_SIZE);
 				break;
 			case Direction.DOWN:
-				this.context.rect(0, height - DIRECTION_SIZE, width, DIRECTION_SIZE);
+				this.context.rect(sectionWidth * 1, sectionTop, sectionWidth, DIRECTION_SIZE);
 				break;
 			case Direction.LEFT:
-				this.context.rect(0, 0, DIRECTION_SIZE, height);
+				this.context.rect(sectionWidth * 2, sectionTop, sectionWidth, DIRECTION_SIZE);
 				break;
 			case Direction.RIGHT:
-				this.context.rect(width - DIRECTION_SIZE, 0, DIRECTION_SIZE, height);
+				this.context.rect(sectionWidth * 3, sectionTop, sectionWidth, DIRECTION_SIZE);
 				break;
 		}
 		this.context.closePath();
