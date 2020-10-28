@@ -6,6 +6,23 @@
 		<title>Face Game</title>
 
 		<style>
+			* {
+				font-family: Arial, Helvetica, sans-serif;
+			}
+
+			body {
+				background: #136a8a; /* fallback for old browsers */
+				background: -webkit-linear-gradient(
+					to right,
+					#136a8a,
+					#267871
+				); /* Chrome 10-25, Safari 5.1-6 */
+				background: linear-gradient(
+					to right,
+					#136a8a,
+					#267871
+				); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+			}
 			.videoGroup {
 				position: relative;
 				text-align: center;
@@ -19,8 +36,24 @@
 			}
 
 			#video,
-			.emotions {
+			.emotions,
+			.header {
 				width: 650px;
+			}
+
+			.header > h1 {
+				text-align: center;
+			}
+
+			.header > p {
+				padding: 10px;
+				margin: 0px;
+			}
+
+			.header {
+				background-color: white;
+				margin-left: auto;
+				margin-right: auto;
 			}
 
 			.emotions {
@@ -30,6 +63,18 @@
 				position: relative;
 				table-layout: fixed;
 				text-align: center;
+				background-color: white;
+				margin-top: -10px;
+				vertical-align: center;
+			}
+
+			.emotions td {
+				padding-top: 10px;
+				padding-bottom: 10px;
+			}
+
+			.emotions td + td {
+				border-left: 2px solid black;
 			}
 		</style>
 	</head>
@@ -94,6 +139,18 @@
 				}
 			}
 		</style>
+
+		<div class="header">
+			<h1>Face Trainer</h1>
+			<p>
+				Are you having a hard time expressing human emotions? Well, look no
+				further! With the help of
+				<a
+					href="https://justadudewhohacks.github.io/face-api.js/docs/index.html"
+					>face-api.js</a
+				>, I've developed a tool to help you master those pesky emotions.
+			</p>
+		</div>
 
 		<div class="videoGroup">
 			<video id="video" autoplay></video>

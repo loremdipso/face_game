@@ -1,7 +1,9 @@
 import { Direction, drawPoint } from "game";
+import { isSpreadElement } from "typescript";
+import { OUTER_POINT_SIZE, Point, POINT_SIZE, Rect } from "./game";
 
 const DELAY_HEIGHT = 100;
-
+const DROP_SPEED = 1 / 30; // how many pixels to move per ms
 export class Piece {
 	public y: number;
 	private direction: Direction;
@@ -9,22 +11,27 @@ export class Piece {
 	constructor(
 		private canvas: HTMLCanvasElement,
 		private context: CanvasRenderingContext2D,
-		private lowestY: number // the lowest Y of any existing piece
+		lowestY: number // the lowest Y of any existing piece
 	) {
 		this.direction = getRandomDirection();
 		this.y = Math.min(lowestY - DELAY_HEIGHT, 0);
 	}
 
-	public update() {
-		this.y += 5;
+	public update(timeDelta: number) {
+		this.y += timeDelta * DROP_SPEED;
 	}
 
 	public shouldDelete(): boolean {
 		return this.y > this.canvas.height;
 	}
 
+	public didCapture(activeArea: Rect): boolean {
+		return isPointInArea({ x: this.getX(), y: this.y + POINT_SIZE }, activeArea);
+	}
+
 	public draw() {
-		drawPoint(this.context, { x: this.getX(), y: this.y }, "blue");
+		drawPoint(this.context, { x: this.getX(), y: this.y }, "black", OUTER_POINT_SIZE);
+		drawPoint(this.context, { x: this.getX(), y: this.y }, "#F15BB5");
 	}
 
 	private getX(): number {
@@ -52,4 +59,16 @@ function getRandomDirection() {
 		Direction.RIGHT
 	];
 	return directions[Math.floor(Math.random() * directions.length)];
+}
+
+function isPointInArea(point: Point, activeArea: Rect): boolean {
+	if (point.x < activeArea.x || point.x > activeArea.x + activeArea.width) {
+		return false;
+	}
+
+	if (point.y < activeArea.y || point.y > activeArea.y + activeArea.height) {
+		return false;
+	}
+
+	return true;
 }
