@@ -1,6 +1,6 @@
 import * as faceapi from "face-api.js";
 import { Piece } from "./piece";
-import { DIRECTION_BACKGROUND_SIZE, drawRect, getDistance, NUM_PIECES, Point, Rect, VICTORY_DURATION } from "./utils";
+import { DEBUG, DIRECTION_BACKGROUND_SIZE, drawRect, getDistance, NUM_PIECES, Point, Rect, VICTORY_DURATION } from "./utils";
 
 export enum Direction {
 	SURPRISED = "surprised",
@@ -106,7 +106,10 @@ export class Game {
 	private resizeCanvas() {
 		this.canvas.width = this.siblingEl.clientWidth;
 		this.canvas.height = this.siblingEl.clientHeight;
-		this.canvas.style.backgroundColor = "rgba(0,255,0,0.3)";
+
+		if (DEBUG) {
+			this.canvas.style.backgroundColor = "rgba(0,255,0,0.3)";
+		}
 	}
 
 	private printDirection(dir: Direction) {

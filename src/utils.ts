@@ -8,6 +8,8 @@ export const DROP_SPEED = 1 / 20; // how many pixels to move per ms
 export const FACE_SIZE = 75;
 export const DELAY_HEIGHT = FACE_SIZE * 3;
 
+export const DEBUG = false;
+
 export interface Point {
 	x: number,
 	y: number,
