@@ -1,30 +1,12 @@
 import * as faceapi from "face-api.js";
-import { Piece } from "piece";
-
-export const POINT_SIZE = 20;
-export const OUTER_POINT_SIZE = POINT_SIZE + 10;
-const DIRECTION_SIZE = 10;
-const DIRECTION_BACKGROUND_SIZE = 60;
-const NUM_PIECES = 10;
-const VICTORY_DURATION = 1000; // ms?
+import { Piece } from "./piece";
+import { DIRECTION_BACKGROUND_SIZE, drawRect, getDistance, NUM_PIECES, Point, Rect, VICTORY_DURATION } from "./utils";
 
 export enum Direction {
-	UP = "up",
-	DOWN = "down",
-	LEFT = "left",
-	RIGHT = "right"
-}
-
-export interface Point {
-	x: number,
-	y: number,
-}
-
-export interface Rect {
-	x: number,
-	y: number,
-	height: number,
-	width: number,
+	SURPRISED = "surprised",
+	HAPPY = "happy",
+	FEARFUL = "fearful",
+	ANGRY = "angry"
 }
 
 class GameState {
@@ -45,9 +27,12 @@ export class Game {
 		this.canvas = document.createElement("canvas");
 		this.context = this.canvas.getContext("2d");
 		this.siblingEl.parentElement.appendChild(this.canvas);
-		(this.siblingEl as HTMLElement).addEventListener("resize", () => {
-			this.resizeCanvas();
-		});
+
+		// catches most vertical resizes (video play, for ex.)
+		this.siblingEl.addEventListener("resize", () => { this.resizeCanvas(); });
+
+		// catches rest of resize events
+		window.addEventListener("resize", () => { this.resizeCanvas(); });
 
 		this.resizeCanvas();
 	};
@@ -73,7 +58,6 @@ export class Game {
 		expressions: faceapi.FaceExpressions
 	) {
 		this.state.nose = this.getCenter(landmarks.getNose());
-		this.state.direction = this.getDirectionFromNose(bounds, this.state.nose);
 		this.state.direction = this.getDirectionFromExpressions(expressions);
 	}
 
@@ -109,19 +93,20 @@ export class Game {
 	private draw() {
 		this.clear();
 
-		// drawPoint(this.context, this.state.nose, "red");
 		this.drawDirection(this.state.direction);
 
 		for (let piece of this.state.pieces) {
 			piece.draw();
 		}
+
+		this.drawScore()
 	}
 
 	// =============== utils ===============
 	private resizeCanvas() {
 		this.canvas.width = this.siblingEl.clientWidth;
 		this.canvas.height = this.siblingEl.clientHeight;
-		this.canvas.style.backgroundColor = "rgba(0,255,0,0.1)";
+		this.canvas.style.backgroundColor = "rgba(0,255,0,0.3)";
 	}
 
 	private printDirection(dir: Direction) {
@@ -140,28 +125,6 @@ export class Game {
 		return center;
 	}
 
-	private getDirectionFromNose(bounds: Rect, nose: Point): Direction {
-		// idea: find out which point the nose is closest to
-		let keyPoints = [
-			{ direction: Direction.UP, point: { x: bounds.x + bounds.width / 2, y: bounds.y } },
-			{ direction: Direction.DOWN, point: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height } },
-			{ direction: Direction.LEFT, point: { x: bounds.x, y: bounds.y + bounds.height / 2 } },
-			{ direction: Direction.RIGHT, point: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 } }
-		];
-
-		let minDistance = -1;
-		let direction = Direction.UP;
-		for (let point of keyPoints) {
-			let distance = getDistance(point.point, nose);
-			if (minDistance < 0 || distance < minDistance) {
-				minDistance = distance;
-				direction = point.direction;
-			}
-		}
-
-		return direction;
-	}
-
 	private getDirectionFromExpressions(expressions: faceapi.FaceExpressions): Direction {
 		let sortedExpressions = expressions.asSortedArray();
 
@@ -169,17 +132,17 @@ export class Game {
 			// options: 'neutral' | 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised'
 			switch (expression.expression) {
 				case "surprised":
-					return Direction.UP;
+					return Direction.SURPRISED;
 				case "happy":
-					return Direction.DOWN;
+					return Direction.HAPPY;
 				case "fearful":
-					return Direction.LEFT;
+					return Direction.FEARFUL;
 				case "angry":
-					return Direction.RIGHT;
+					return Direction.ANGRY;
 			}
 		}
 
-		return Direction.LEFT;
+		return Direction.FEARFUL;
 	}
 
 
@@ -188,21 +151,41 @@ export class Game {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 
+	private drawScore() {
+		let text = `Score: ${this.state.score}`;
+		let textHeight = 20; // pixels
+
+		this.context.fillStyle = "white";
+		this.context.textBaseline = "top";
+		this.context.font = `${textHeight}px Arial`;
+
+		let textWidth = this.context.measureText(text).width;
+
+		drawRect(this.context, {
+			x: 0,
+			y: 0,
+			width: textWidth,
+			height: textHeight,
+		}, "black");
+
+		this.context.fillText(text, 0, 0);
+	}
+
 	private drawDirection(direction: Direction) {
 		let sectionWidth = this.canvas.width / 4;
 
 		let left = 0;
 		switch (direction) {
-			case Direction.UP:
+			case Direction.SURPRISED:
 				left = sectionWidth * 0;
 				break;
-			case Direction.DOWN:
+			case Direction.HAPPY:
 				left = sectionWidth * 1;
 				break;
-			case Direction.LEFT:
+			case Direction.FEARFUL:
 				left = sectionWidth * 2;
 				break;
-			case Direction.RIGHT:
+			case Direction.ANGRY:
 				left = sectionWidth * 3;
 				break;
 		}
@@ -225,13 +208,6 @@ export class Game {
 			color,
 			0.6
 		);
-
-		// let sectionTop = this.canvas.height - DIRECTION_SIZE;
-		// drawRect(
-		// 	this.context,
-		// 	{ x: left, y: sectionTop, width: sectionWidth, height: DIRECTION_SIZE },
-		// 	color
-		// );
 	}
 
 	private getActiveSectionBoundingBox(): Rect {
@@ -239,16 +215,16 @@ export class Game {
 
 		let left = 0;
 		switch (this.state.direction) {
-			case Direction.UP:
+			case Direction.SURPRISED:
 				left = sectionWidth * 0;
 				break;
-			case Direction.DOWN:
+			case Direction.HAPPY:
 				left = sectionWidth * 1;
 				break;
-			case Direction.LEFT:
+			case Direction.FEARFUL:
 				left = sectionWidth * 2;
 				break;
-			case Direction.RIGHT:
+			case Direction.ANGRY:
 				left = sectionWidth * 3;
 				break;
 		}
@@ -257,29 +233,4 @@ export class Game {
 			width: sectionWidth, height: DIRECTION_BACKGROUND_SIZE
 		};
 	}
-}
-
-function getDistance(p1: Point, p2: Point): number {
-	return Math.sqrt(((p2.x - p1.x) ** 2) + ((p2.y - p1.y) ** 2));
-}
-
-export function drawPoint(context: CanvasRenderingContext2D, center: Point, color: string, radius: number = POINT_SIZE) {
-	context.save();
-	context.beginPath();
-	context.fillStyle = color;
-	context.arc(center.x, center.y, radius, 0, 2 * Math.PI);
-	context.closePath();
-	context.fill();
-	context.restore();
-}
-
-export function drawRect(context: CanvasRenderingContext2D, rect: Rect, color: string, opacity: number = 1.0) {
-	context.save();
-	context.beginPath();
-	context.globalAlpha = opacity;
-	context.fillStyle = color;
-	context.fillRect(rect.x, rect.y, rect.width, rect.height);
-	context.closePath();
-	context.fill();
-	context.restore();
 }

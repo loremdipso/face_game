@@ -1,9 +1,44 @@
-import { Direction, drawPoint } from "game";
-import { isSpreadElement } from "typescript";
-import { OUTER_POINT_SIZE, Point, POINT_SIZE, Rect } from "./game";
+import { Direction } from "./game";
+import { Point, Rect, FACE_SIZE, DELAY_HEIGHT, DROP_SPEED } from "./utils";
 
-const DELAY_HEIGHT = 100;
-const DROP_SPEED = 1 / 30; // how many pixels to move per ms
+interface ICachedImage {
+	image: HTMLImageElement,
+	is_loaded: boolean
+};
+
+class ImageLoader {
+	private static images: { [key: string]: ICachedImage } = {};
+	private static is_setup = false;
+
+	// public api
+	public static Setup() {
+		if (!ImageLoader.is_setup) {
+			ImageLoader.is_setup = true;
+
+			ImageLoader.images[Direction.SURPRISED] = ImageLoader.createImage(Direction.SURPRISED);
+			ImageLoader.images[Direction.HAPPY] = ImageLoader.createImage(Direction.HAPPY);
+			ImageLoader.images[Direction.FEARFUL] = ImageLoader.createImage(Direction.FEARFUL);
+			ImageLoader.images[Direction.ANGRY] = ImageLoader.createImage(Direction.ANGRY);
+		}
+	}
+
+	public static getImage(direction: Direction): HTMLImageElement | null {
+		let result = ImageLoader.images[direction];
+		return result.is_loaded ? result.image : null;
+	}
+
+	// helpers
+	private static createImage(direction: Direction): ICachedImage {
+		let image = document.createElement("img");
+		image.src = `images/${direction.toString()}.svg`
+		image.onload = () => {
+			ImageLoader.images[direction].is_loaded = true;
+		};
+
+		return { image: image, is_loaded: false };
+	}
+}
+
 export class Piece {
 	public y: number;
 	private direction: Direction;
@@ -15,7 +50,10 @@ export class Piece {
 	) {
 		this.direction = getRandomDirection();
 		this.y = Math.min(lowestY - DELAY_HEIGHT, 0);
+		ImageLoader.Setup();
 	}
+
+
 
 	public update(timeDelta: number) {
 		this.y += timeDelta * DROP_SPEED;
@@ -26,12 +64,14 @@ export class Piece {
 	}
 
 	public didCapture(activeArea: Rect): boolean {
-		return isPointInArea({ x: this.getX(), y: this.y + POINT_SIZE }, activeArea);
+		return isPointInArea({ x: this.getX(), y: this.y + FACE_SIZE }, activeArea);
 	}
 
 	public draw() {
-		drawPoint(this.context, { x: this.getX(), y: this.y }, "black", OUTER_POINT_SIZE);
-		drawPoint(this.context, { x: this.getX(), y: this.y }, "#F15BB5");
+		let image = ImageLoader.getImage(this.direction);
+		if (image) {
+			this.context.drawImage(image, this.getX() - FACE_SIZE / 2, this.y, FACE_SIZE, FACE_SIZE);
+		}
 	}
 
 	private getX(): number {
@@ -39,13 +79,13 @@ export class Piece {
 		let left = cellWidth / 2;
 
 		switch (this.direction) {
-			case Direction.UP:
+			case Direction.SURPRISED:
 				return left + cellWidth * 0;
-			case Direction.DOWN:
+			case Direction.HAPPY:
 				return left + cellWidth * 1;
-			case Direction.LEFT:
+			case Direction.FEARFUL:
 				return left + cellWidth * 2;
-			case Direction.RIGHT:
+			case Direction.ANGRY:
 				return left + cellWidth * 3;
 		}
 	}
@@ -53,10 +93,10 @@ export class Piece {
 
 function getRandomDirection() {
 	let directions = [
-		Direction.UP,
-		Direction.DOWN,
-		Direction.LEFT,
-		Direction.RIGHT
+		Direction.SURPRISED,
+		Direction.HAPPY,
+		Direction.FEARFUL,
+		Direction.ANGRY
 	];
 	return directions[Math.floor(Math.random() * directions.length)];
 }

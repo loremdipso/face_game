@@ -1,6 +1,5 @@
 import * as faceapi from "face-api.js";
-import { FaceExpressionNet } from "face-api.js";
-import { Game } from "game";
+import { Game } from "./game";
 
 
 export async function init() {
@@ -28,15 +27,29 @@ export async function init() {
 		videoGroup.append(videoCanvas);
 		game.start();
 
-		// ### Init configs
-		const rect = videoEl.getBoundingClientRect();
-		const displayValues = {
-			width: rect.width,
-			height: rect.height
+		let rect = videoEl.getBoundingClientRect();
+		let displayValues = {
+			width: 0,
+			height: 0
 		};
 
-		// ### Resize media elements
-		faceapi.matchDimensions(videoCanvas, displayValues)
+		const resize = () => {
+			// ### Init configs
+			rect = videoEl.getBoundingClientRect();
+			displayValues = {
+				width: rect.width,
+				height: rect.height
+			};
+
+			// ### Resize media elements
+			faceapi.matchDimensions(videoCanvas, displayValues)
+		};
+
+		resize();
+
+		videoEl.addEventListener("resize", resize);
+		window.addEventListener("resize", resize);
+
 
 		setInterval(async () => {
 			let detections =
