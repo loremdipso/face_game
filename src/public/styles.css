@@ -1,0 +1,99 @@
+* {
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+	margin: 0;
+	background: #136a8a; /* fallback for old browsers */
+	background: -webkit-linear-gradient(
+		to right,
+		#136a8a,
+		#267871
+	); /* Chrome 10-25, Safari 5.1-6 */
+	background: linear-gradient(
+		to right,
+		#136a8a,
+		#267871
+	); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+.videoGroup {
+	position: relative;
+	text-align: center;
+}
+
+.videoGroup > canvas {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translate(-50%, 0);
+}
+
+#video,
+.emotions,
+.header,
+#messageGroup {
+	max-width: 650px;
+	width: 100%;
+}
+
+#message {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+#video {
+	background-color: #f9f9f9;
+}
+
+#messageGroup {
+	position: absolute;
+	top: 7rem; /* hacky centering of text, because I value my time somewhat */
+	left: 50%;
+	transform: translate(-50%, 0); /* to center align the canvas overlay */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	font-size: 3rem;
+}
+
+.header > h1 {
+	text-align: center;
+	padding-top: 10px;
+	margin-top: -10px;
+}
+
+.header > p {
+	padding: 10px;
+	margin: 0px;
+}
+
+.header,
+.emotions {
+	background-color: #f9f9f9;
+}
+
+.header {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.emotions {
+	margin-left: auto;
+	margin-right: auto;
+	flex-direction: row;
+	position: relative;
+	table-layout: fixed;
+	text-align: center;
+	margin-top: -10px;
+	vertical-align: center;
+}
+
+.emotions td {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+.emotions td + td {
+	border-left: 2px solid black;
+}
